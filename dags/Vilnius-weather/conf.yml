@@ -1,0 +1,10 @@
+# Configuration pipeline for the Vilnius weather project 
+
+features_to_db:
+  - dt 
+  - temp
+  - pressure
+  - humidity
+  - clouds
+  - wind_speed
+  - wind_deg
