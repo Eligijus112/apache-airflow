@@ -8,5 +8,9 @@ features_to_db:
   - clouds
   - wind_speed
   - wind_deg
+  - hour_sin
+  - hour_cos
+  - month_sin
+  - month_cos
 
 raw_data_table: vilnius_weather_data

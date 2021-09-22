@@ -54,6 +54,9 @@ def clean_data_dirs():
             # Concatenating all the data 
             _all_data_pd = pd.concat(_all_data_pd)
 
+            # Getting the current feature list 
+            features = list(set(features).intersection(set(_all_data_pd.columns)))
+
             # Aggregating by date 
             _all_data_pd = _all_data_pd.groupby('dt', as_index=False)[features].mean()
 

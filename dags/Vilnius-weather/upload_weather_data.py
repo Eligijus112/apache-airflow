@@ -22,6 +22,9 @@ import dotenv
 # PSQL connection manager
 import psycopg2
 
+# Data engineering 
+from data_engineering import sin_cos_hour, sin_cos_month
+
 def upload_weather_data():
     """
     Function that uploads data to db 
@@ -84,6 +87,17 @@ def upload_weather_data():
         # Preprocesing the datetime collumn 
         d['dt'] = [x.split(" +")[0] for x in d['dt']]
         d['dt'] = [datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in d['dt']]
+
+        # Creating additional features 
+        hours = [sin_cos_hour(x) for x in d['dt']]
+        month = [sin_cos_month(x) for x in d['dt']]
+
+        hours = pd.DataFrame(hours)
+        month = pd.DataFrame(month)
+
+        # Saving to the original dataframe
+        d[['hour_sin', 'hour_cos']] = hours[['hour_sin', 'hour_cos']]
+        d[['month_sin', 'month_cos']] = month[['month_sin', 'month_cos']]
 
         # Making the connection to psql database
         conn = {}

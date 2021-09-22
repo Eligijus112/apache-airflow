@@ -24,3 +24,7 @@ class VilniusWeatherData(Base):
     clouds = Column(Float)
     wind_speed = Column(Float)
     wind_deg = Column(Float) 
+    hour_sin = Column(Float)
+    hour_cos = Column(Float)
+    month_sin = Column(Float)
+    month_cos = Column(Float)
