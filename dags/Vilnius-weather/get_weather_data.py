@@ -1,6 +1,7 @@
 # Date wrangling 
 import datetime 
 import time 
+from datetime import timedelta
 
 # Json parsing
 import json
@@ -27,31 +28,42 @@ def get_weather_data():
     # Reading the env parameters
     dotenv.load_dotenv(os.path.join(cur_dir, '.env'))
 
-    # Getting the historical free data
-    unix = int(time.mktime(datetime.datetime.now().date().timetuple()))
+    # Getting the last 5 days worth of data 
+    current_date = datetime.datetime.now()
+    dates = [current_date - timedelta(x) for x in range(5)]
 
-    # Making the request for Vilnius city weather data 
-    req = requests.get(f"https://api.openweathermap.org/data/2.5/onecall/timemachine?lat={54.7}&lon={25.3}&dt={unix}&appid={os.environ['API_KEY']}&units=metric")
+    # Iterating through the dates 
+    df_hourly = pd.DataFrame({})
 
-    # Extracting the data from the response 
-    response = json.loads(req.content)
+    for date in dates:
+        # Converting to unix datetime 
+        unix = int(time.mktime(date.date().timetuple()))
 
-    # Getting the hourly data 
-    hourly = response.get('hourly')
+        # Making the request for Vilnius city weather data 
+        req = requests.get(f"https://api.openweathermap.org/data/2.5/onecall/timemachine?lat={54.7}&lon={25.3}&dt={unix}&appid={os.environ['API_KEY']}&units=metric")
 
-    # Creating a tidy dataframe from the hourly data 
-    df_hourly = pd.DataFrame([{
-        "dt": x.get("dt"),
-        "temp": x.get("temp"),
-        "pressure": x.get('pressure'),
-        "humidity": x.get('humidity'),
-        "clouds": x.get("clouds"),
-        "visibility": x.get('visibility'),
-        "wind_speed": x.get('wind_speed'), 
-        "wind_deg": x.get('wind_deg')
-    } 
-    for x in hourly
-    ])
+        # Extracting the data from the response 
+        response = json.loads(req.content)
+
+        # Getting the hourly data 
+        hourly = response.get('hourly')
+
+        # Creating a tidy dataframe from the hourly data 
+        df_hourly_date = pd.DataFrame([{
+            "dt": x.get("dt"),
+            "temp": x.get("temp"),
+            "pressure": x.get('pressure'),
+            "humidity": x.get('humidity'),
+            "clouds": x.get("clouds"),
+            "visibility": x.get('visibility'),
+            "wind_speed": x.get('wind_speed'), 
+            "wind_deg": x.get('wind_deg')
+        } 
+        for x in hourly
+        ])
+
+        # Appending to hourly df 
+        df_hourly = pd.concat([df_hourly, df_hourly_date]) 
 
     # Converting unix date to datetime 
     df_hourly['dt'] = [datetime.datetime.fromtimestamp(x) for x in df_hourly['dt']]

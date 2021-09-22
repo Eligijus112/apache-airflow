@@ -8,3 +8,5 @@ features_to_db:
   - clouds
   - wind_speed
   - wind_deg
+
+raw_data_table: vilnius_weather_data

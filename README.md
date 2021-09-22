@@ -4,19 +4,22 @@ This project is intended to organize all the ETL and ML procedures from various 
 
 # Starting apache airflow
 
+Apache Airflow runs in docker following the official documentation. 
+
 In separate terminals type: 
 
-Starting webserver:
-
 ```
-airflow webserver -p 8080
+docker-compose up
 ```
 
-Starting task scheduler:
+To access the UI visit the link in the browser:
 
 ```
-airflow scheduler
+localhost:8080
 ```
+
+USR: **airflow**
+PSW: **airflow**
 
 # DAGS 
 
@@ -24,5 +27,5 @@ The [D]irected [A]crylic [G]raphs are stored in the **dags/** directory. Dags ar
 
 ## Vilnius-weather 
 
-This project uses the 
+The project is in the **dags/Vilnius-weather** directory. Data is loaded from the **openweather** api and stored in an PSQL database. 
 

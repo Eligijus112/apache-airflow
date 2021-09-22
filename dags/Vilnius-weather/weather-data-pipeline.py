@@ -16,6 +16,7 @@ from airflow.utils.dates import days_ago
 # Importing the ML pipeline parts
 from get_weather_data import get_weather_data
 from upload_weather_data import upload_weather_data
+from clean_data_dirs import clean_data_dirs
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -38,18 +39,27 @@ dag = DAG(
     schedule_interval=timedelta(days=1),
 )
 
-# Instantiate tasks using Operators.
+## Defining each step of the DAGs
+# Downloading data from OpenWeather API
 download_data = PythonOperator(
     task_id='download_data',
     python_callable=get_weather_data,
     dag=dag,
 )
 
+# Cleaning the downloaded data
+clean_data_dirs = PythonOperator(
+    task_id='clean_data_dirs',
+    python_callable=clean_data_dirs,
+    dag=dag,
+)
+
+# Uploading raw data to database
 upload_weather_data = PythonOperator(
-    task_id='upload_data',
+    task_id='upload_weather_data',
     python_callable=upload_weather_data,
     dag=dag,
 )
 
-#sets the ordering of the DAG. The >> directs the 2nd task to run after the 1st task. 
-download_data >> upload_weather_data
+# The whole pipeline
+download_data >> clean_data_dirs >> upload_weather_data

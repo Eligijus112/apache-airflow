@@ -3,3 +3,6 @@ __pycache__/
 data/
 .~*
 apache-airflow-local/
+psql-data/
+logs/
+plugins/

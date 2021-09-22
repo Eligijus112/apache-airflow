@@ -13,6 +13,9 @@ import yaml
 # Datetime wrangling 
 from datetime import datetime
 
+# Time tracking 
+import time 
+
 # ENVIRON parameters
 import dotenv
 
@@ -30,10 +33,13 @@ def upload_weather_data():
     dotenv.load_dotenv(os.path.join(_cur_dir, '.env'))
 
     # Reading the configurations
-    conf = conf = yaml.load(open(os.path.join(_cur_dir, "conf.yml"), encoding='utf8'), Loader=yaml.FullLoader)
+    conf = yaml.load(open(os.path.join(_cur_dir, "conf.yml"), encoding='utf8'), Loader=yaml.FullLoader)
 
     # Extracting the final subset of features
     features = conf.get("features_to_db")
+
+    # Saving the name of the table for data upload 
+    raw_data_table = conf.get('raw_data_table')
 
     # Listing all the directories in the data/ folder
     _data_folder = os.path.join(_cur_dir, "data")
@@ -49,7 +55,7 @@ def upload_weather_data():
             _data_paths = os.listdir(os.path.join(_data_folder, data_dir))
 
             # Leaving only .csv files
-            _data_paths = [x for x in _data_paths if x.endswith(".csv")]
+            _data_paths = [x for x in _data_paths if x.endswith("_agg.csv")]
 
             # Reading each file and leaving the predifined features
             if len(_data_paths) > 0:
@@ -80,32 +86,44 @@ def upload_weather_data():
         d['dt'] = [datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in d['dt']]
 
         # Making the connection to psql database
-        conn = psycopg2.connect(
-            host=os.environ.get("POSTGRES_HOST"),
-            database=os.environ.get("POSTGRES_DB"),
-            user=os.environ.get("POSTGRES_USER"),
-            password=os.environ.get("POSTGRES_PASSWORD"),
-            port=os.environ.get("POSTGRES_PORT")
-            )
+        conn = {}
+        try:
+            # Connection in docker
+            conn = psycopg2.connect(
+                host='weather_db',
+                database=os.environ.get("POSTGRES_DB"),
+                user=os.environ.get("POSTGRES_USER"),
+                password=os.environ.get("POSTGRES_PASSWORD")
+                )
+        except:
+            # Connection in local env 
+            conn = psycopg2.connect(
+                host=os.environ.get("POSTGRES_HOST"),
+                database=os.environ.get("POSTGRES_DB"),
+                user=os.environ.get("POSTGRES_USER"),
+                password=os.environ.get("POSTGRES_PASSWORD"),
+                port=os.environ.get("POSTGRES_PORT")
+                )
 
         # TODO Change this behaviour to be a more elegant solution 
         # Droping data from the database 
-        cursor = conn.cursor()
-        cursor.execute("TRUNCATE vilnius_weather")
+        if isinstance(conn, psycopg2.extensions.connection):
+            cursor = conn.cursor()
+            cursor.execute(f"TRUNCATE {raw_data_table}")
 
-        print(f"Total rows to db to be uploaded: {d.shape[0]}")
+            print(f"Total rows to db to be uploaded: {d.shape[0]}")
 
-        start = datetime.now()
-        
-        # Copying the data 
-        d.to_csv("temp.csv")
-        with open('temp.csv', 'r') as f:
-            next(f) # Skip the header row.
-            cursor.copy_from(f, 'vilnius_weather', sep=',')
-        conn.commit()
-        os.remove("temp.csv")
+            start = time.time()
+            
+            # Copying the data 
+            d.to_csv("temp.csv")
+            with open('temp.csv', 'r') as f:
+                next(f) # Skip the header row.
+                cursor.copy_from(f, raw_data_table, sep=',')
+            conn.commit()
+            os.remove("temp.csv")
 
-        print(f"Uplaoded in: {datetime.now() - start}")
+            print(f"Uploaded in: {round(time.time() - start, 4)} seconds")
 
 if __name__ == "__main__":
     upload_weather_data()
