@@ -58,3 +58,28 @@ def sin_cos_month(x: datetime.datetime) -> dict:
 
     # Returning the dict 
     return sin_cos
+
+def create_X_Y(ts: np.array, lag=1, n_ahead=1, target_index=0) -> tuple:
+    """
+    A method to create X and Y matrix from a time series array for the training of 
+    deep learning models 
+    """
+    # Extracting the number of features that are passed from the array 
+    n_features = ts.shape[1]
+    
+    # Creating placeholder lists
+    X, Y = [], []
+
+    if len(ts) - lag <= 0:
+        X.append(ts)
+    else:
+        for i in range(len(ts) - lag - n_ahead):
+            Y.append(ts[(i + lag):(i + lag + n_ahead), target_index])
+            X.append(ts[i:(i + lag)])
+
+    X, Y = np.array(X), np.array(Y)
+
+    # Reshaping the X array to an RNN input shape 
+    X = np.reshape(X, (X.shape[0], lag, n_features))
+
+    return X, Y

@@ -1,5 +1,6 @@
 # Configuration pipeline for the Vilnius weather project 
 
+# Features that should be written to db 
 features_to_db:
   - dt 
   - temp
@@ -13,4 +14,28 @@ features_to_db:
   - month_sin
   - month_cos
 
+# The table holding raw data 
 raw_data_table: vilnius_weather_data
+
+# Deep learning model parameters
+NN_params:
+  epocs: 20
+  batch_size: 512
+  features_to_use: 
+    - temp
+    - pressure
+    - humidity
+    - clouds
+    - wind_speed
+    - wind_deg
+    - hour_sin
+    - hour_cos
+    - month_sin
+    - month_cos
+  features_to_scale:
+    - temp
+    - pressure
+    - humidity
+    - clouds
+    - wind_speed
+    - wind_deg
